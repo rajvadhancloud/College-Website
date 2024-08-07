@@ -17,7 +17,7 @@
                 <a href="home.php">Home</a>
             </div>
             <div class="hover:text-blue-200">
-                <a href="courses.php"> Courses</a>  
+                <a href="courses.php"> Courses</a>
             </div>
             <div class="hover:text-blue-200">
                 <a href="about.php"> About</a>
@@ -36,14 +36,15 @@
         </section>
         <section class="parent">
             <div class="text-center bg-blue-950 container">
-                <form action="index.php" method="post" class="grid grid-cols-1 form_class">
+                <form action="contact.php" method="POST" class="grid grid-cols-1 form_class">
                     <Label class="text-4xl font-bold p-10 text-white">Email</Label>
                     <div class="text-center"><input type="email" name="email" class="email-input"></div>
 
                     <label class="text-4xl font-bold p-10 text-white">Message</label>
                     <div class="text-center"><input type="text" name="message" class="msg-input"></div>
                     <div class="button_class">
-                    <button type="submit" name="submit" class="button_top send_button">Send</button></div>
+                        <button type="submit" name="submit" class="button_top send_button">Send</button>
+                    </div>
 
                 </form>
             </div>
@@ -54,3 +55,56 @@
 </body>
 
 </html>
+
+<?php
+
+//Import PHPMailer classes into the global namespace
+//These must be at the top of your script, not inside a function
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+require 'phpmailer/src/Exception.php';
+require 'phpmailer/src/PHPMailer.php';
+require 'phpmailer/src/SMTP.php';
+//Load Composer's autoloader
+require 'vendor/autoload.php';
+
+//Create an instance; passing `true` enables exceptions
+$mail = new PHPMailer(true);
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $mailfrom = $_POST["email"];
+    $msg = $_POST["message"];
+    try {
+        //Server settings
+        // $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
+        $mail->isSMTP();                                            //Send using SMTP
+        $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
+        $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
+        $mail->Username   = 'rajvardhansingh605@gmail.com';                     //SMTP username
+        $mail->Password   = 'pmevbogxugeueegf';                               //SMTP password
+        $mail->SMTPSecure = 'ssl';            //Enable implicit TLS encryption
+        $mail->Port       = 465;                                    //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
+
+        //Recipients
+        $mail->setFrom($mailfrom);
+        $mail->addAddress('rajvardhansingh605@gmail.com');     //Add a recipient
+
+
+        //Content
+        $mail->isHTML(true);                                  //Set email format to HTML
+        $mail->Subject = 'Mail from college website from '.$mailfrom;
+        $mail->Body    = $msg;
+
+        $mail->send();
+        echo '<script>alert("Message has been sent")</script>';
+    } catch (Exception $e) {
+        echo '<script>alert("error occured")</script>';
+        // echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+    }
+} else {
+    echo '<script>alert("Please give some inputs")</script>';
+}
+
+?>
