@@ -540,11 +540,109 @@
     .footer-divider { width: 40px; height: 2px; background: var(--primary); margin: 20px auto; border-radius: 2px; }
     .footer-meta { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 16px; }
 
-    /* ─── Print ──────────────────────────────────────── */
+    /* ─── Print / PDF ────────────────────────────────── */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
     @media print {
-      .page-header { display: none; }
-      .cover { page-break-after: always; }
-      .section { page-break-inside: avoid; }
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      html, body {
+        width: 210mm;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page-header { display: none !important; }
+
+      .cover {
+        page-break-after: always;
+        min-height: 297mm;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cover::before, .cover::after {
+        display: none;
+      }
+
+      .section {
+        page-break-inside: avoid;
+      }
+
+      .step-card,
+      .tool-card,
+      .toc-item,
+      .impact-card,
+      .callout,
+      .table-wrapper {
+        page-break-inside: avoid;
+        box-shadow: none !important;
+      }
+
+      .step-number,
+      .toc-num,
+      .check-icon {
+        background: #FF7A59 !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .cover-badge {
+        background: rgba(255,122,89,0.2) !important;
+        border: 1px solid rgba(255,122,89,0.5) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      thead {
+        background: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .code-block {
+        background: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .callout.info { background: #ebf8ff !important; -webkit-print-color-adjust: exact !important; }
+      .callout.warning { background: #fffff0 !important; -webkit-print-color-adjust: exact !important; }
+      .callout.success { background: #f0fff4 !important; -webkit-print-color-adjust: exact !important; }
+      .callout.danger { background: #fff5f5 !important; -webkit-print-color-adjust: exact !important; }
+
+      .section-eyebrow {
+        background: rgba(255,122,89,0.12) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .divider-line {
+        background: linear-gradient(to right, #FF7A59, #0091AE) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .timeline::before {
+        background: linear-gradient(to bottom, #FF7A59, #0091AE) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .timeline-item::before {
+        background: #FF7A59 !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .footer {
+        background: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .toc-section {
+        page-break-after: always;
+      }
     }
 
     /* ─── Responsive ─────────────────────────────────── */
