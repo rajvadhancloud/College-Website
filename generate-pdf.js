@@ -1,9 +1,24 @@
 const puppeteer = require('puppeteer');
 const path = require('path');
 
+const target = process.argv[2] || 'deduplication';
+
+const files = {
+  deduplication: {
+    html: 'hubspot-deduplication-guide.html',
+    pdf:  'HubSpot-Deduplication-Guide.pdf'
+  },
+  scoring: {
+    html: 'hubspot-lead-scoring-guide.html',
+    pdf:  'HubSpot-Lead-Scoring-Guide.pdf'
+  }
+};
+
+const chosen = files[target] || files.deduplication;
+
 (async () => {
-  const htmlFile = path.resolve(__dirname, 'hubspot-deduplication-guide.html');
-  const outputPdf = path.resolve(__dirname, 'HubSpot-Deduplication-Guide.pdf');
+  const htmlFile = path.resolve(__dirname, chosen.html);
+  const outputPdf = path.resolve(__dirname, chosen.pdf);
 
   console.log('Launching browser...');
   const browser = await puppeteer.launch({
