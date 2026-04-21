@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HubSpot Lead Scoring — Complete Guide</title>
+  <style>
+    :root {
+      --primary: #FF7A59;
+      --primary-dark: #e05a3a;
+      --secondary: #0091AE;
+      --secondary-dark: #006e84;
+      --dark: #1a1a2e;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f7fafc;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --success: #38a169;
+      --warning: #d69e2e;
+      --danger: #e53e3e;
+      --info: #3182ce;
+      --purple: #805ad5;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ─── Cover ───────────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover-glow-1 {
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,122,89,0.18) 0%, transparent 70%);
+      top: -120px; right: -120px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .cover-glow-2 {
+      position: absolute;
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(0,145,174,0.15) 0%, transparent 70%);
+      bottom: -80px; left: -60px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .cover-logo {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 50px; z-index: 1;
+    }
+    .cover-logo-text { font-size: 26px; font-weight: 700; color: var(--primary); }
+    .cover-badge {
+      background: rgba(255,122,89,0.15) !important;
+      border: 1px solid rgba(255,122,89,0.4);
+      color: var(--primary);
+      padding: 8px 22px; border-radius: 50px;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      margin-bottom: 28px; z-index: 1;
+    }
+    .cover h1 {
+      font-size: clamp(34px, 5.5vw, 62px);
+      font-weight: 900; color: var(--white);
+      line-height: 1.12; margin-bottom: 24px; z-index: 1;
+      max-width: 860px;
+    }
+    .cover h1 span { color: var(--primary); }
+    .cover-subtitle {
+      font-size: 18px; color: rgba(255,255,255,0.62);
+      max-width: 620px; margin-bottom: 56px; z-index: 1;
+    }
+    .cover-stats {
+      display: flex; gap: 40px; z-index: 1;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .cover-stat { text-align: center; }
+    .cover-stat-num {
+      font-size: 36px; font-weight: 900; color: var(--primary);
+      line-height: 1; margin-bottom: 6px;
+    }
+    .cover-stat-label { font-size: 13px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px; }
+    .cover-divider {
+      width: 60px; height: 3px;
+      background: linear-gradient(to right, var(--primary), var(--secondary)) !important;
+      margin: 40px auto; border-radius: 2px; z-index: 1;
+    }
+    .cover-meta {
+      display: flex; gap: 36px; z-index: 1;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .cover-meta-item { text-align: center; }
+    .cover-meta-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+    .cover-meta-value { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.8); }
+
+    /* ─── Sticky Header ───────────────────────────────── */
+    .page-header {
+      background: var(--white) !important;
+      border-bottom: 3px solid var(--primary);
+      padding: 18px 0; position: sticky; top: 0; z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .page-header .container {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 16px;
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-brand span { font-size: 17px; font-weight: 700; color: var(--primary); }
+    .header-title { font-size: 13px; color: var(--text-light); }
+
+    /* ─── Container ───────────────────────────────────── */
+    .container { max-width: 1020px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── TOC ─────────────────────────────────────────── */
+    .toc-section { background: var(--white) !important; padding: 64px 0; }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 14px; margin-top: 30px;
+    }
+    .toc-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 18px; border: 1px solid var(--border);
+      border-radius: 12px; text-decoration: none;
+      color: var(--text); background: var(--bg) !important;
+      transition: all 0.2s;
+    }
+    .toc-item:hover { border-color: var(--primary); background: var(--white) !important; box-shadow: var(--shadow); }
+    .toc-num {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+      color: var(--white); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px; flex-shrink: 0;
+    }
+    .toc-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .toc-desc { font-size: 12px; color: var(--text-light); }
+
+    /* ─── Section ─────────────────────────────────────── */
+    .section { padding: 72px 0; }
+    .section:nth-child(even) { background: var(--white) !important; }
+    .section-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,122,89,0.08) !important;
+      border: 1px solid rgba(255,122,89,0.25);
+      color: var(--primary); padding: 6px 14px; border-radius: 50px;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.8px;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+    .section-title { font-size: clamp(26px, 3.5vw, 38px); font-weight: 900; color: var(--dark); line-height: 1.2; margin-bottom: 14px; }
+    .section-title span { color: var(--primary); }
+    .section-desc { font-size: 16px; color: var(--text-light); max-width: 700px; margin-bottom: 40px; }
+    .divider-line { width: 56px; height: 4px; background: linear-gradient(to right, var(--primary), var(--secondary)) !important; border-radius: 2px; margin-bottom: 28px; }
+
+    /* ─── Callout ─────────────────────────────────────── */
+    .callout { display: flex; gap: 16px; padding: 20px 24px; border-radius: 12px; margin: 24px 0; align-items: flex-start; }
+    .callout-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .callout-body h4 { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+    .callout-body p, .callout-body ul { font-size: 13px; line-height: 1.65; }
+    .callout-body ul { padding-left: 18px; }
+    .callout-body ul li { margin-bottom: 4px; }
+    .callout.info { background: #ebf8ff !important; border-left: 4px solid var(--info); }
+    .callout.info .callout-body h4 { color: var(--info); }
+    .callout.warning { background: #fffff0 !important; border-left: 4px solid var(--warning); }
+    .callout.warning .callout-body h4 { color: var(--warning); }
+    .callout.success { background: #f0fff4 !important; border-left: 4px solid var(--success); }
+    .callout.success .callout-body h4 { color: var(--success); }
+    .callout.danger { background: #fff5f5 !important; border-left: 4px solid var(--danger); }
+    .callout.danger .callout-body h4 { color: var(--danger); }
+    .callout.purple { background: #faf5ff !important; border-left: 4px solid var(--purple); }
+    .callout.purple .callout-body h4 { color: var(--purple); }
+
+    /* ─── Steps ───────────────────────────────────────── */
+    .steps-list { display: flex; flex-direction: column; gap: 24px; }
+    .step-card {
+      display: flex; gap: 22px;
+      background: var(--white) !important; border: 1px solid var(--border);
+      border-radius: 16px; padding: 26px; box-shadow: var(--shadow);
+      align-items: flex-start;
+    }
+    .step-number {
+      width: 48px; height: 48px; min-width: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+      color: var(--white); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800;
+    }
+    .step-body h3 { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .step-body p { font-size: 14px; color: var(--text-light); margin-bottom: 12px; }
+
+    /* ─── Sub-list ────────────────────────────────────── */
+    .sub-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .sub-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--text);
+      background: var(--bg) !important; padding: 10px 14px;
+      border-radius: 8px; border-left: 3px solid var(--primary);
+    }
+    .sub-list li::before { content: '▶'; color: var(--primary); font-size: 10px; margin-top: 3px; flex-shrink: 0; }
+
+    /* ─── Score Framework Table ───────────────────────── */
+    .table-wrapper { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); margin: 24px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead { background: linear-gradient(135deg, #1a1a2e, #2d3748) !important; }
+    thead th { padding: 14px 18px; color: var(--white); font-weight: 600; text-align: left; font-size: 13px; letter-spacing: 0.5px; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) { background: rgba(247,250,252,0.8) !important; }
+    tbody tr:hover { background: rgba(255,122,89,0.04) !important; }
+    tbody td { padding: 13px 18px; color: var(--text); }
+    tbody td:first-child { font-weight: 600; }
+
+    /* ─── Score Badge ─────────────────────────────────── */
+    .score-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 52px; padding: 4px 12px; border-radius: 50px;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.5px;
+    }
+    .score-pos { background: #c6f6d5 !important; color: #276749; }
+    .score-neg { background: #fed7d7 !important; color: #9b2c2c; }
+    .score-high { background: #c3dafe !important; color: #2b4a8b; }
+
+    /* ─── Tier Cards ──────────────────────────────────── */
+    .tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; margin: 32px 0; }
+    .tier-card { border-radius: 16px; padding: 26px 22px; text-align: center; border: 2px solid transparent; }
+    .tier-card.cold { background: #ebf8ff !important; border-color: #90cdf4; }
+    .tier-card.warm { background: #fffff0 !important; border-color: #f6e05e; }
+    .tier-card.hot  { background: #fff5eb !important; border-color: #fbd38d; }
+    .tier-card.fire { background: #fff5f5 !important; border-color: #fc8181; }
+    .tier-score { font-size: 38px; font-weight: 900; margin-bottom: 6px; }
+    .tier-card.cold  .tier-score { color: var(--info); }
+    .tier-card.warm  .tier-score { color: var(--warning); }
+    .tier-card.hot   .tier-score { color: #c05621; }
+    .tier-card.fire  .tier-score { color: var(--danger); }
+    .tier-label { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .tier-desc { font-size: 13px; color: var(--text-light); line-height: 1.5; }
+    .tier-action { margin-top: 14px; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 50px; display: inline-block; }
+    .tier-card.cold  .tier-action { background: #bee3f8 !important; color: #2b6cb0; }
+    .tier-card.warm  .tier-action { background: #fefcbf !important; color: #744210; }
+    .tier-card.hot   .tier-action { background: #feebc8 !important; color: #7b341e; }
+    .tier-card.fire  .tier-action { background: #fed7d7 !important; color: #742a2a; }
+
+    /* ─── Criteria Grid ───────────────────────────────── */
+    .criteria-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 32px 0; }
+    .criteria-card { background: var(--white) !important; border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+    .criteria-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .criteria-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .criteria-card h3 { font-size: 16px; font-weight: 700; color: var(--dark); }
+    .criteria-card .criteria-type { font-size: 12px; color: var(--text-light); }
+    .criteria-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .criteria-list li {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; padding: 8px 12px; border-radius: 8px;
+      background: var(--bg) !important;
+    }
+    .criteria-list .c-label { color: var(--text); }
+    .criteria-list .c-score { font-weight: 700; }
+    .criteria-list .c-score.pos { color: var(--success); }
+    .criteria-list .c-score.neg { color: var(--danger); }
+
+    /* ─── Formula Box ─────────────────────────────────── */
+    .formula-box {
+      background: linear-gradient(135deg, #1a1a2e, #2d3748) !important;
+      border-radius: 16px; padding: 32px; margin: 24px 0;
+      text-align: center;
+    }
+    .formula-box h4 { font-size: 14px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .formula-text { font-size: clamp(16px, 2.5vw, 22px); font-weight: 800; color: var(--white); line-height: 1.6; }
+    .formula-text .f-pos { color: #a0ecb1; }
+    .formula-text .f-neg { color: #fc8181; }
+    .formula-text .f-op  { color: var(--primary); }
+
+    /* ─── Workflow Steps ──────────────────────────────── */
+    .workflow { display: flex; flex-direction: column; gap: 0; position: relative; }
+    .workflow::before { content: ''; position: absolute; left: 24px; top: 48px; bottom: 48px; width: 2px; background: linear-gradient(to bottom, var(--primary), var(--secondary)) !important; }
+    .wf-step { display: flex; gap: 20px; align-items: flex-start; padding: 0 0 28px 0; position: relative; z-index: 1; }
+    .wf-step:last-child { padding-bottom: 0; }
+    .wf-num {
+      width: 48px; height: 48px; min-width: 48px;
+      background: var(--white) !important; border: 3px solid var(--primary);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-weight: 900; font-size: 16px;
+      color: var(--primary); flex-shrink: 0;
+    }
+    .wf-body { background: var(--white) !important; border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; flex: 1; box-shadow: var(--shadow); }
+    .wf-body h4 { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+    .wf-body p { font-size: 14px; color: var(--text-light); }
+    .wf-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .wf-tag.trigger  { background: #c3dafe !important; color: #2b4a8b; }
+    .wf-tag.action   { background: #c6f6d5 !important; color: #276749; }
+    .wf-tag.branch   { background: #feebc8 !important; color: #7b341e; }
+    .wf-tag.notify   { background: #e9d8fd !important; color: #553c9a; }
+
+    /* ─── Pill ────────────────────────────────────────── */
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 600; }
+    .pill.green { background: #f0fff4 !important; color: var(--success); border: 1px solid #9ae6b4; }
+    .pill.orange { background: #fff5eb !important; color: #c05621; border: 1px solid #fbd38d; }
+    .pill.blue { background: #ebf8ff !important; color: var(--info); border: 1px solid #90cdf4; }
+    .pill.purple { background: #faf5ff !important; color: var(--purple); border: 1px solid #d6bcfa; }
+    .pill.red { background: #fff5f5 !important; color: var(--danger); border: 1px solid #feb2b2; }
+
+    /* ─── Checklist ───────────────────────────────────── */
+    .checklist { display: flex; flex-direction: column; gap: 10px; }
+    .checklist-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--white) !important; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 500; }
+    .check-icon { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--success), #276749) !important; color: var(--white); font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* ─── Comparison ──────────────────────────────────── */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 28px 0; }
+    .compare-card { border-radius: 14px; padding: 24px; border: 2px solid transparent; }
+    .compare-card.good { background: #f0fff4 !important; border-color: #9ae6b4; }
+    .compare-card.bad  { background: #fff5f5 !important; border-color: #feb2b2; }
+    .compare-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .compare-header span { font-size: 22px; }
+    .compare-header h4 { font-size: 16px; font-weight: 700; }
+    .compare-card.good .compare-header h4 { color: var(--success); }
+    .compare-card.bad  .compare-header h4 { color: var(--danger); }
+    .compare-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .compare-list li { font-size: 13px; color: var(--text); padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .compare-list li:last-child { border-bottom: none; }
+
+    /* ─── Footer ──────────────────────────────────────── */
+    .footer { background: #1a1a2e !important; color: rgba(255,255,255,0.5); padding: 48px 0; text-align: center; }
+    .footer-logo { font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 12px; }
+    .footer p { font-size: 13px; line-height: 1.7; max-width: 520px; margin: 0 auto; }
+    .footer-divider { width: 40px; height: 2px; background: var(--primary) !important; margin: 20px auto; border-radius: 2px; }
+    .footer-meta { font-size: 12px; color: rgba(255,255,255,0.28); margin-top: 16px; }
+
+    /* ─── Print ───────────────────────────────────────── */
+    @media print {
+      @page { size: A4; margin: 0; }
+      html, body { width: 210mm; margin: 0; padding: 0; }
+      .page-header { display: none !important; }
+      .cover { page-break-after: always; min-height: 297mm; }
+      .section, .step-card, .wf-body, .criteria-card, .callout, .table-wrapper { page-break-inside: avoid; box-shadow: none !important; }
+      .toc-section { page-break-after: always; }
+      .criteria-grid, .compare-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .criteria-grid, .compare-grid { grid-template-columns: 1fr; }
+      .step-card { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     COVER
+══════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-glow-1"></div>
+  <div class="cover-glow-2"></div>
+
+  <div class="cover-logo">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="24" fill="#FF7A59" opacity="0.15"/>
+      <path d="M30.5 18.5c0-1.66-1.34-3-3-3s-3 1.34-3 3c0 1.15.65 2.14 1.6 2.65v3.96l-8.1 4.73c-.52-.34-1.14-.54-1.8-.54-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5c0-.2-.02-.39-.05-.58l4.85-2.83 4.85 2.83c-.03.19-.05.38-.05.58 0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5c-.6 0-1.16.16-1.65.44l-2.35-1.37V21.1c.93-.52 1.7-1.53 1.7-2.6z" fill="#FF7A59"/>
+    </svg>
+    <span class="cover-logo-text">HubSpot CRM</span>
+  </div>
+
+  <div class="cover-badge">Complete Professional Guide</div>
+  <h1>Master <span>Lead Scoring</span><br>in HubSpot</h1>
+  <p class="cover-subtitle">
+    A comprehensive playbook to build, configure, and optimize a lead scoring system that automatically prioritizes your hottest prospects and drives more revenue.
+  </p>
+
+  <div class="cover-divider"></div>
+
+  <div class="cover-stats">
+    <div class="cover-stat">
+      <div class="cover-stat-num">77%</div>
+      <div class="cover-stat-label">Higher Conversion Rate with Lead Scoring</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">4×</div>
+      <div class="cover-stat-label">Faster Sales Cycle</div>
+    </div>
+    <div class="cover-stat">
+      <div class="cover-stat-num">50%</div>
+      <div class="cover-stat-label">More Sales-Ready Leads</div>
+    </div>
+  </div>
+
+  <div class="cover-divider"></div>
+
+  <div class="cover-meta">
+    <div class="cover-meta-item"><div class="cover-meta-label">Type</div><div class="cover-meta-value">Technical Guide</div></div>
+    <div class="cover-meta-item"><div class="cover-meta-label">Audience</div><div class="cover-meta-value">Marketing & Sales Teams</div></div>
+    <div class="cover-meta-item"><div class="cover-meta-label">Prepared</div><div class="cover-meta-value">April 2026</div></div>
+    <div class="cover-meta-item"><div class="cover-meta-label">Version</div><div class="cover-meta-value">1.0</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     STICKY NAV
+══════════════════════════════════ -->
+<header class="page-header">
+  <div class="container">
+    <div class="header-brand">
+      <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
+        <path d="M30.5 18.5c0-1.66-1.34-3-3-3s-3 1.34-3 3c0 1.15.65 2.14 1.6 2.65v3.96l-8.1 4.73c-.52-.34-1.14-.54-1.8-.54-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5c0-.2-.02-.39-.05-.58l4.85-2.83 4.85 2.83c-.03.19-.05.38-.05.58 0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5c-.6 0-1.16.16-1.65.44l-2.35-1.37V21.1c.93-.52 1.7-1.53 1.7-2.6z" fill="#FF7A59"/>
+      </svg>
+      <span>HubSpot Lead Scoring Guide</span>
+    </div>
+    <div class="header-title">Marketing &amp; Sales Optimization — April 2026</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════════════ -->
+<section class="toc-section">
+  <div class="container">
+    <div class="section-eyebrow">📋 Navigation</div>
+    <h2 class="section-title">Table of <span>Contents</span></h2>
+    <div class="divider-line"></div>
+    <div class="toc-grid">
+      <a class="toc-item" href="#what-is">
+        <div class="toc-num">1</div>
+        <div><div class="toc-title">What is Lead Scoring?</div><div class="toc-desc">Concept, benefits & how it works</div></div>
+      </a>
+      <a class="toc-item" href="#types">
+        <div class="toc-num">2</div>
+        <div><div class="toc-title">Types of Lead Scoring</div><div class="toc-desc">Manual vs. AI-powered (Predictive)</div></div>
+      </a>
+      <a class="toc-item" href="#criteria">
+        <div class="toc-num">3</div>
+        <div><div class="toc-title">Scoring Criteria & Points</div><div class="toc-desc">Demographic, firmographic & behavioral</div></div>
+      </a>
+      <a class="toc-item" href="#setup">
+        <div class="toc-num">4</div>
+        <div><div class="toc-title">Setup in HubSpot</div><div class="toc-desc">Step-by-step configuration guide</div></div>
+      </a>
+      <a class="toc-item" href="#tiers">
+        <div class="toc-num">5</div>
+        <div><div class="toc-title">Lead Tiers & Thresholds</div><div class="toc-desc">Cold, Warm, Hot, MQL definitions</div></div>
+      </a>
+      <a class="toc-item" href="#workflows">
+        <div class="toc-num">6</div>
+        <div><div class="toc-title">Automation Workflows</div><div class="toc-desc">Auto-assign, notify, and nurture by score</div></div>
+      </a>
+      <a class="toc-item" href="#best-practices">
+        <div class="toc-num">7</div>
+        <div><div class="toc-title">Best Practices</div><div class="toc-desc">Common mistakes & optimization tips</div></div>
+      </a>
+      <a class="toc-item" href="#checklist">
+        <div class="toc-num">8</div>
+        <div><div class="toc-title">Launch Checklist</div><div class="toc-desc">Ready-to-use pre-launch checklist</div></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 1 — WHAT IS LEAD SCORING
+══════════════════════════════════ -->
+<section class="section" id="what-is">
+  <div class="container">
+    <div class="section-eyebrow">💡 Section 01</div>
+    <h2 class="section-title">What is <span>Lead Scoring?</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Lead scoring is a methodology that assigns a numerical value to each contact in your CRM based on how closely they match your ideal customer profile and how engaged they are with your business. The higher the score, the more likely they are to buy.
+    </p>
+
+    <div class="formula-box">
+      <h4>The Lead Scoring Formula</h4>
+      <div class="formula-text">
+        Lead Score <span class="f-op">=</span> <span class="f-pos">Positive Actions & Fit (+points)</span> <span class="f-op">−</span> <span class="f-neg">Negative Signals & Misfit (−points)</span>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <h4>Why Lead Scoring Matters</h4>
+        <p>Without lead scoring, your sales team treats every lead the same — wasting time on cold contacts while hot prospects go cold. Lead scoring ensures reps focus only on the leads most likely to convert, while marketing nurtures everyone else automatically.</p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:20px; margin-top:36px;">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;box-shadow:var(--shadow);">
+        <div style="font-size:36px;margin-bottom:10px;">🎯</div>
+        <h4 style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:6px;">Prioritize Sales Effort</h4>
+        <p style="font-size:13px;color:var(--text-light);">Focus reps on the highest-potential leads every single day.</p>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;box-shadow:var(--shadow);">
+        <div style="font-size:36px;margin-bottom:10px;">🤝</div>
+        <h4 style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:6px;">Align Sales & Marketing</h4>
+        <p style="font-size:13px;color:var(--text-light);">Define "sales-ready" together with a shared numeric threshold.</p>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;box-shadow:var(--shadow);">
+        <div style="font-size:36px;margin-bottom:10px;">📈</div>
+        <h4 style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:6px;">Improve Conversion Rates</h4>
+        <p style="font-size:13px;color:var(--text-light);">Timed, relevant outreach to leads at the right moment.</p>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;box-shadow:var(--shadow);">
+        <div style="font-size:36px;margin-bottom:10px;">⚙️</div>
+        <h4 style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:6px;">Automate Nurturing</h4>
+        <p style="font-size:13px;color:var(--text-light);">Trigger workflows and sequences automatically based on score.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 2 — TYPES
+══════════════════════════════════ -->
+<section class="section" id="types">
+  <div class="container">
+    <div class="section-eyebrow">⚖️ Section 02</div>
+    <h2 class="section-title">Types of <span>Lead Scoring</span> in HubSpot</h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">HubSpot offers two scoring models. Choose based on your data maturity and plan level.</p>
+
+    <div class="compare-grid">
+      <div class="compare-card good">
+        <div class="compare-header"><span>🧮</span><h4>Manual Lead Scoring</h4></div>
+        <ul class="compare-list">
+          <li>You define the criteria and assign point values</li>
+          <li>Full control over what matters to your business</li>
+          <li>Works on all HubSpot plans (Starter+)</li>
+          <li>Requires regular manual review and tuning</li>
+          <li>Best when starting out or in niche industries</li>
+          <li>Uses the <strong>HubSpot Score</strong> property</li>
+        </ul>
+      </div>
+      <div class="compare-card bad" style="background:#faf5ff !important; border-color:#d6bcfa;">
+        <div class="compare-header"><span>🤖</span><h4 style="color:var(--purple);">Predictive Lead Scoring (AI)</h4></div>
+        <ul class="compare-list">
+          <li>AI analyzes patterns across all your contacts</li>
+          <li>Learns from closed/won deals to identify what "good" looks like</li>
+          <li>Requires <strong>Professional or Enterprise</strong> plan</li>
+          <li>Needs minimum 200 contacts + deal history to train</li>
+          <li>Scores update automatically as new data comes in</li>
+          <li>Uses the <strong>Likelihood to Close</strong> property</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <div class="callout-body">
+        <h4>Recommendation</h4>
+        <p>Start with <strong>Manual Lead Scoring</strong> to establish your baseline criteria and understand what converts in your business. Once you have 6+ months of deal history, layer in <strong>Predictive Scoring</strong> on top for AI-powered refinement.</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Manual Scoring</th><th>Predictive Scoring</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>HubSpot Plan</td><td><span class="pill green">All Plans</span></td><td><span class="pill purple">Pro / Enterprise</span></td></tr>
+          <tr><td>Setup Effort</td><td>Moderate — you define rules</td><td>Low — AI trains automatically</td></tr>
+          <tr><td>Accuracy</td><td>Good if tuned regularly</td><td>High — improves over time</td></tr>
+          <tr><td>Transparency</td><td>Fully visible logic</td><td>Black-box AI model</td></tr>
+          <tr><td>Best For</td><td>All businesses</td><td>Businesses with rich deal data</td></tr>
+          <tr><td>Score Property</td><td>HubSpot Score</td><td>Likelihood to Close (%)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 3 — SCORING CRITERIA
+══════════════════════════════════ -->
+<section class="section" id="criteria">
+  <div class="container">
+    <div class="section-eyebrow">📊 Section 03</div>
+    <h2 class="section-title">Scoring <span>Criteria & Points</span> Framework</h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Lead scoring combines two dimensions: <strong>Fit</strong> (who they are) and <strong>Engagement</strong> (what they do). Below is a ready-to-use scoring framework you can adapt for your business.
+    </p>
+
+    <div class="criteria-grid">
+
+      <!-- DEMOGRAPHIC / FIT -->
+      <div class="criteria-card">
+        <div class="criteria-header">
+          <div class="criteria-icon" style="background:#ebf8ff !important;">👤</div>
+          <div><h3>Demographic Fit</h3><div class="criteria-type">WHO they are — Positive Scores</div></div>
+        </div>
+        <ul class="criteria-list">
+          <li><span class="c-label">Job Title: Decision Maker (VP, Director, C-Suite)</span><span class="c-score pos">+20</span></li>
+          <li><span class="c-label">Job Title: Manager / Team Lead</span><span class="c-score pos">+10</span></li>
+          <li><span class="c-label">Job Title: Individual Contributor</span><span class="c-score pos">+5</span></li>
+          <li><span class="c-label">Industry matches ICP</span><span class="c-score pos">+15</span></li>
+          <li><span class="c-label">Company size: 50–500 employees</span><span class="c-score pos">+10</span></li>
+          <li><span class="c-label">Company size: 500+ employees</span><span class="c-score pos">+15</span></li>
+          <li><span class="c-label">Located in target geography</span><span class="c-score pos">+10</span></li>
+          <li><span class="c-label">Phone number provided</span><span class="c-score pos">+5</span></li>
+          <li><span class="c-label">Work email (not Gmail/Yahoo)</span><span class="c-score pos">+10</span></li>
+        </ul>
+      </div>
+
+      <!-- BEHAVIORAL / ENGAGEMENT -->
+      <div class="criteria-card">
+        <div class="criteria-header">
+          <div class="criteria-icon" style="background:#f0fff4 !important;">⚡</div>
+          <div><h3>Behavioral Engagement</h3><div class="criteria-type">WHAT they do — Positive Scores</div></div>
+        </div>
+        <ul class="criteria-list">
+          <li><span class="c-label">Requested a Demo / Free Trial</span><span class="c-score pos">+30</span></li>
+          <li><span class="c-label">Visited Pricing Page</span><span class="c-score pos">+20</span></li>
+          <li><span class="c-label">Downloaded a Case Study</span><span class="c-score pos">+15</span></li>
+          <li><span class="c-label">Attended a Webinar</span><span class="c-score pos">+15</span></li>
+          <li><span class="c-label">Opened 3+ Marketing Emails</span><span class="c-score pos">+10</span></li>
+          <li><span class="c-label">Clicked Email CTA</span><span class="c-score pos">+8</span></li>
+          <li><span class="c-label">Visited Website 3+ Times</span><span class="c-score pos">+10</span></li>
+          <li><span class="c-label">Downloaded an eBook / Guide</span><span class="c-score pos">+10</span></li>
+          <li><span class="c-label">Submitted a Contact Form</span><span class="c-score pos">+20</span></li>
+        </ul>
+      </div>
+
+      <!-- NEGATIVE SIGNALS -->
+      <div class="criteria-card">
+        <div class="criteria-header">
+          <div class="criteria-icon" style="background:#fff5f5 !important;">📉</div>
+          <div><h3>Negative Signals</h3><div class="criteria-type">Disqualifiers — Negative Scores</div></div>
+        </div>
+        <ul class="criteria-list">
+          <li><span class="c-label">Job Title: Student / Intern</span><span class="c-score neg">−15</span></li>
+          <li><span class="c-label">Personal email (Gmail, Yahoo, etc.)</span><span class="c-score neg">−10</span></li>
+          <li><span class="c-label">Unsubscribed from Emails</span><span class="c-score neg">−20</span></li>
+          <li><span class="c-label">Marked Email as Spam</span><span class="c-score neg">−30</span></li>
+          <li><span class="c-label">Industry: Competitor</span><span class="c-score neg">−25</span></li>
+          <li><span class="c-label">No activity in 90+ days</span><span class="c-score neg">−15</span></li>
+          <li><span class="c-label">Bounced Email</span><span class="c-score neg">−10</span></li>
+          <li><span class="c-label">Company size &lt; 10 (if SMB not ICP)</span><span class="c-score neg">−10</span></li>
+          <li><span class="c-label">Visited Careers / Jobs page only</span><span class="c-score neg">−10</span></li>
+        </ul>
+      </div>
+
+      <!-- SCORE DECAY -->
+      <div class="criteria-card">
+        <div class="criteria-header">
+          <div class="criteria-icon" style="background:#fffff0 !important;">⏰</div>
+          <div><h3>Score Decay Rules</h3><div class="criteria-type">Time-based score reduction</div></div>
+        </div>
+        <ul class="criteria-list">
+          <li><span class="c-label">No email opens in 30 days</span><span class="c-score neg">−5</span></li>
+          <li><span class="c-label">No website visits in 60 days</span><span class="c-score neg">−10</span></li>
+          <li><span class="c-label">No engagement in 90 days</span><span class="c-score neg">−20</span></li>
+          <li><span class="c-label">Deal Closed Lost</span><span class="c-score neg">−30</span></li>
+          <li><span class="c-label">No activity in 180 days</span><span class="c-score neg">−40</span></li>
+        </ul>
+        <div class="callout warning" style="margin-top:14px; padding:14px 16px;">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <h4>Implement Score Decay</h4>
+            <p>Use a recurring HubSpot workflow to subtract points for inactive contacts. Prevents stale leads from clogging your hot pipeline.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout success" style="margin-top:16px;">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <h4>Scoring Range Recommendation</h4>
+        <p>Keep your scoring scale between <strong>0 and 100</strong> for simplicity. Design criteria so a perfect ICP who books a demo reaches approximately 80–100 points. This makes threshold definitions intuitive for both marketing and sales teams.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 4 — SETUP IN HUBSPOT
+══════════════════════════════════ -->
+<section class="section" id="setup">
+  <div class="container">
+    <div class="section-eyebrow">⚙️ Section 04</div>
+    <h2 class="section-title">Step-by-Step <span>Setup</span> in HubSpot</h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">Follow these steps to configure the HubSpot Score property and build your first scoring rules inside HubSpot.</p>
+
+    <div class="steps-list">
+
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-body">
+          <h3>Navigate to the Lead Scoring Settings</h3>
+          <p>Find the scoring configuration inside your HubSpot portal settings.</p>
+          <ul class="sub-list">
+            <li>Click the <strong>Settings ⚙️</strong> icon in the top-right of your HubSpot portal.</li>
+            <li>In the left sidebar, go to <strong>Properties</strong>.</li>
+            <li>Search for <strong>"HubSpot Score"</strong> in the property list.</li>
+            <li>Click on <strong>HubSpot Score</strong> to open the scoring editor.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-body">
+          <h3>Add Positive Scoring Attributes</h3>
+          <p>Define the criteria that add points to a contact's score when the condition is met.</p>
+          <ul class="sub-list">
+            <li>Click <strong>"Add criteria"</strong> under the <strong>Positive attributes</strong> section.</li>
+            <li>Select a <strong>property</strong> (e.g., Job Title, Industry, Form Submission, Page View).</li>
+            <li>Set the <strong>condition</strong> (e.g., Job Title "contains" Director).</li>
+            <li>Enter the <strong>point value</strong> for that criterion (e.g., 20 points).</li>
+            <li>Click <strong>Save</strong> and repeat for each positive criterion.</li>
+          </ul>
+          <div class="callout info" style="margin-top:14px;">
+            <div class="callout-icon">ℹ️</div>
+            <div class="callout-body">
+              <h4>Available Scoring Criteria Types in HubSpot</h4>
+              <ul>
+                <li><strong>Contact properties</strong> — Job title, industry, country, lifecycle stage, etc.</li>
+                <li><strong>Company properties</strong> — Company size, revenue, domain, industry</li>
+                <li><strong>Form submissions</strong> — Submitted a specific form (e.g., demo request)</li>
+                <li><strong>Email engagement</strong> — Opened, clicked, unsubscribed</li>
+                <li><strong>Page views</strong> — Visited a specific URL (e.g., /pricing)</li>
+                <li><strong>List membership</strong> — Is/was a member of a specific contact list</li>
+                <li><strong>Workflow enrollment</strong> — Was enrolled in a specific automation</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-body">
+          <h3>Add Negative Scoring Attributes</h3>
+          <p>Define criteria that subtract points — these act as disqualifiers.</p>
+          <ul class="sub-list">
+            <li>Click <strong>"Add criteria"</strong> under the <strong>Negative attributes</strong> section.</li>
+            <li>Add criteria like: Email unsubscribed = true → <strong>−20 points</strong>.</li>
+            <li>Add: Job Title contains "student" → <strong>−15 points</strong>.</li>
+            <li>Add: Email bounce reason is known → <strong>−10 points</strong>.</li>
+            <li>Save each criterion after setting the negative point value.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <div class="step-body">
+          <h3>Save and Activate the Scoring Model</h3>
+          <p>Once all criteria are configured, activate the model to start scoring.</p>
+          <ul class="sub-list">
+            <li>Review all positive and negative criteria in the editor.</li>
+            <li>Click <strong>Save</strong> at the top of the scoring editor.</li>
+            <li>HubSpot will immediately begin calculating the <strong>HubSpot Score</strong> for all existing contacts.</li>
+            <li>Allow 1–4 hours for HubSpot to score all existing records (varies by database size).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">5</div>
+        <div class="step-body">
+          <h3>Verify Scores on Contact Records</h3>
+          <p>Spot-check the scores on known contacts to validate your model is working correctly.</p>
+          <ul class="sub-list">
+            <li>Open a contact you know is a strong lead — verify their score is in the high range.</li>
+            <li>Open a contact you know is a poor fit — verify their score is low or negative.</li>
+            <li>On the contact record, find the <strong>HubSpot Score</strong> property in the left panel.</li>
+            <li>Click the score number to see a breakdown of which criteria are contributing.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">6</div>
+        <div class="step-body">
+          <h3>Enable Predictive Lead Scoring (Pro/Enterprise Only)</h3>
+          <p>Activate AI-powered scoring alongside manual scoring for maximum accuracy.</p>
+          <ul class="sub-list">
+            <li>Go to <strong>Settings → Properties → Contact Properties</strong>.</li>
+            <li>Search for <strong>"Likelihood to close"</strong>.</li>
+            <li>This property is automatically populated by HubSpot AI — no configuration needed.</li>
+            <li>HubSpot requires at least <strong>200 contacts</strong> in your CRM with deal associations to begin training.</li>
+            <li>Use this as a secondary score alongside your manual HubSpot Score.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 5 — LEAD TIERS
+══════════════════════════════════ -->
+<section class="section" id="tiers">
+  <div class="container">
+    <div class="section-eyebrow">🏆 Section 05</div>
+    <h2 class="section-title">Lead Tiers & <span>Score Thresholds</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Define clear score bands that map to lead stages and sales actions. This removes all ambiguity about which leads sales should call today.
+    </p>
+
+    <div class="tier-grid">
+      <div class="tier-card cold">
+        <div class="tier-score">0–24</div>
+        <div class="tier-label">❄️ Cold Lead</div>
+        <div class="tier-desc">Early stage. Little fit or engagement. Needs nurturing content, not sales calls.</div>
+        <div class="tier-action">Nurture via Email</div>
+      </div>
+      <div class="tier-card warm">
+        <div class="tier-score">25–49</div>
+        <div class="tier-label">🌡️ Warm Lead</div>
+        <div class="tier-desc">Some engagement. Decent fit. Enroll in targeted email sequences and monitor for activity spikes.</div>
+        <div class="tier-action">Enroll in Sequence</div>
+      </div>
+      <div class="tier-card hot">
+        <div class="tier-score">50–74</div>
+        <div class="tier-label">🔥 Hot Lead (MQL)</div>
+        <div class="tier-desc">Strong fit and engagement. Marketing Qualified Lead — alert sales for soft outreach within 24 hours.</div>
+        <div class="tier-action">Sales Soft Outreach</div>
+      </div>
+      <div class="tier-card fire">
+        <div class="tier-score">75–100</div>
+        <div class="tier-label">🚨 Sales-Ready (SQL)</div>
+        <div class="tier-desc">Perfect fit, high engagement. Sales Qualified Lead — assign to a rep immediately for direct outreach.</div>
+        <div class="tier-action">Immediate Sales Call</div>
+      </div>
+    </div>
+
+    <div class="table-wrapper" style="margin-top:36px;">
+      <table>
+        <thead>
+          <tr><th>Score Band</th><th>Stage</th><th>Lifecycle Stage</th><th>Sales Action</th><th>Response SLA</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="score-badge score-high">0–24</span></td><td>Cold</td><td>Subscriber / Lead</td><td>Add to nurture email campaign</td><td>No immediate action</td></tr>
+          <tr><td><span class="score-badge score-high">25–49</span></td><td>Warm</td><td>Lead</td><td>Enroll in targeted drip sequence</td><td>Monitor weekly</td></tr>
+          <tr><td><span class="score-badge score-pos">50–74</span></td><td>Hot — MQL</td><td>Marketing Qualified Lead</td><td>Notify assigned rep; soft outreach</td><td>Within 24 hours</td></tr>
+          <tr><td><span class="score-badge score-neg">75–100</span></td><td>SQL</td><td>Sales Qualified Lead</td><td>Immediate rep assignment + call</td><td>Within 4 hours</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <h4>Define Thresholds with Your Sales Team</h4>
+        <p>The thresholds above are starting points. The most important thing is that <strong>Marketing and Sales agree</strong> on what score constitutes an MQL (Marketing Qualified Lead) and an SQL (Sales Qualified Lead). Hold a joint meeting to finalize these numbers before going live.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 6 — WORKFLOWS
+══════════════════════════════════ -->
+<section class="section" id="workflows">
+  <div class="container">
+    <div class="section-eyebrow">🔁 Section 06</div>
+    <h2 class="section-title">Automation <span>Workflows</span> by Score</h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      The real power of lead scoring is what happens automatically when a contact reaches a threshold. Build these four core workflows in HubSpot to activate your scoring model.
+    </p>
+
+    <h3 style="font-size:19px;font-weight:700;color:var(--dark);margin-bottom:20px;">Workflow 1 — MQL Alert & Assignment (Score ≥ 50)</h3>
+    <div class="workflow">
+      <div class="wf-step">
+        <div class="wf-num">1</div>
+        <div class="wf-body">
+          <div class="wf-tag trigger">Trigger</div>
+          <h4>Contact's HubSpot Score reaches 50+</h4>
+          <p>Enrollment trigger: <strong>HubSpot Score ≥ 50</strong> (check every day, re-enroll if score increases again).</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">2</div>
+        <div class="wf-body">
+          <div class="wf-tag action">Action</div>
+          <h4>Update Lifecycle Stage to MQL</h4>
+          <p>Set Contact property: <strong>Lifecycle Stage = Marketing Qualified Lead</strong>.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">3</div>
+        <div class="wf-body">
+          <div class="wf-tag notify">Notify</div>
+          <h4>Send Internal Notification to Sales Rep</h4>
+          <p>Send in-app + email notification to the contact's assigned owner: <em>"New MQL: [Contact Name] has reached a lead score of [Score]. Review now."</em></p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">4</div>
+        <div class="wf-body">
+          <div class="wf-tag action">Action</div>
+          <h4>Create a Follow-up Task for the Rep</h4>
+          <p>Create a task: <strong>"Reach out to MQL within 24 hours"</strong> assigned to the contact owner. Due date: tomorrow at 9 AM.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:19px;font-weight:700;color:var(--dark);margin-top:48px;margin-bottom:20px;">Workflow 2 — SQL Immediate Alert (Score ≥ 75)</h3>
+    <div class="workflow">
+      <div class="wf-step">
+        <div class="wf-num">1</div>
+        <div class="wf-body">
+          <div class="wf-tag trigger">Trigger</div>
+          <h4>HubSpot Score reaches 75+</h4>
+          <p>High-priority trigger — fires as soon as score crosses 75.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">2</div>
+        <div class="wf-body">
+          <div class="wf-tag action">Action</div>
+          <h4>Update Lifecycle Stage to SQL</h4>
+          <p>Set <strong>Lifecycle Stage = Sales Qualified Lead</strong>. If no owner assigned, auto-rotate to next available rep using round-robin rotation.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">3</div>
+        <div class="wf-body">
+          <div class="wf-tag notify">Notify</div>
+          <h4>Urgent Slack / Email Notification</h4>
+          <p>Send urgent notification to rep AND their manager: <em>"🔥 HOT LEAD: [Name] scored [Score]. Call within 4 hours."</em></p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">4</div>
+        <div class="wf-body">
+          <div class="wf-tag action">Action</div>
+          <h4>Enroll in Sales Sequence</h4>
+          <p>Automatically enroll the contact in a <strong>Sales Email Sequence</strong> (if not already in an active sequence).</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:19px;font-weight:700;color:var(--dark);margin-top:48px;margin-bottom:20px;">Workflow 3 — Score Decay (Inactive Leads)</h3>
+    <div class="workflow">
+      <div class="wf-step">
+        <div class="wf-num">1</div>
+        <div class="wf-body">
+          <div class="wf-tag trigger">Trigger</div>
+          <h4>Last Activity Date is more than 90 days ago</h4>
+          <p>Scheduled workflow — runs daily. Trigger: <strong>Last Activity Date &gt; 90 days ago AND HubSpot Score &gt; 0</strong>.</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">2</div>
+        <div class="wf-body">
+          <div class="wf-tag action">Action</div>
+          <h4>Calculate and Reduce Score</h4>
+          <p>Use a <strong>Math calculation</strong> action to subtract 20 from the current HubSpot Score (minimum 0).</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">3</div>
+        <div class="wf-body">
+          <div class="wf-tag branch">Branch</div>
+          <h4>If Score Drops Below 25 — Downgrade Lifecycle</h4>
+          <p>If HubSpot Score is now &lt; 25: Set Lifecycle Stage back to <strong>Lead</strong> and remove from any active sales sequences.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout success" style="margin-top:32px;">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <h4>Workflow 4 — Nurture Cold Leads (Score 0–25)</h4>
+        <p>Build a long-term nurture workflow that enrolls all contacts with score &lt; 25 and sends educational content every 2 weeks. When their score crosses 25 (due to engagement), they are automatically unenrolled from nurture and enrolled in MQL workflows. This creates a fully automated lead progression engine.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 7 — BEST PRACTICES
+══════════════════════════════════ -->
+<section class="section" id="best-practices">
+  <div class="container">
+    <div class="section-eyebrow">🏅 Section 07</div>
+    <h2 class="section-title"><span>Best Practices</span> & Common Mistakes</h2>
+    <div class="divider-line"></div>
+
+    <div class="compare-grid">
+      <div class="compare-card good">
+        <div class="compare-header"><span>✅</span><h4>Do This</h4></div>
+        <ul class="compare-list">
+          <li>Start simple — 5–10 criteria, then expand</li>
+          <li>Score both demographic FIT and behavioral ENGAGEMENT</li>
+          <li>Agree on MQL/SQL thresholds with sales before launch</li>
+          <li>Implement score decay for inactive leads</li>
+          <li>Review and tune scores every 30–60 days</li>
+          <li>Use negative scoring to disqualify bad fits</li>
+          <li>Tie scoring thresholds directly to lifecycle stages</li>
+          <li>Build workflows that fire on score milestones</li>
+          <li>Track win rates by score band to validate accuracy</li>
+          <li>Document every criterion and the reason for its point value</li>
+        </ul>
+      </div>
+      <div class="compare-card bad">
+        <div class="compare-header"><span>❌</span><h4>Avoid This</h4></div>
+        <ul class="compare-list">
+          <li>Too many criteria (50+) that make scores unpredictable</li>
+          <li>Only scoring engagement, ignoring demographic fit</li>
+          <li>Setting thresholds without sales team agreement</li>
+          <li>Never revisiting or tuning the model after launch</li>
+          <li>Ignoring score decay — stale leads inflate the pipeline</li>
+          <li>Using identical point values for all criteria</li>
+          <li>Not tracking which leads actually convert to customers</li>
+          <li>Sending all scored leads directly to sales (skipping MQL)</li>
+          <li>Building complex logic before validating simple rules first</li>
+          <li>No documentation — creates a black box nobody understands</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout purple" style="margin-top:32px;">
+      <div class="callout-icon">🎯</div>
+      <div class="callout-body">
+        <h4>The 30-Day Review Cycle</h4>
+        <p>After your first 30 days, pull a report of all contacts who scored 75+ and check how many converted to customers. If conversion rate is below 20%, your thresholds are too low. If sales say they're getting too many bad leads, raise the MQL threshold. Iterate monthly until your scoring model reliably predicts closers.</p>
+      </div>
+    </div>
+
+    <div class="callout warning" style="margin-top:16px;">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <h4>Avoid "Score Inflation"</h4>
+        <p>If a contact can trigger the same positive criterion repeatedly (e.g., visit the pricing page 10 times for 10 × 20 = 200 points), your scores become meaningless. HubSpot's scoring tool applies each rule <strong>once per contact</strong>, but double-check your workflow-based scoring rules to avoid double-counting.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     SECTION 8 — CHECKLIST
+══════════════════════════════════ -->
+<section class="section" id="checklist">
+  <div class="container">
+    <div class="section-eyebrow">✅ Section 08</div>
+    <h2 class="section-title">Pre-Launch <span>Checklist</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">Use this checklist to ensure your lead scoring model is fully configured and ready to drive revenue.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:40px;">
+      <div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--dark);margin-bottom:16px;">📐 Model Setup</h3>
+        <div class="checklist">
+          <div class="checklist-item"><div class="check-icon">✓</div>HubSpot Score property is configured in Settings → Properties</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>At least 5 positive demographic fit criteria are defined</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>At least 5 positive behavioral engagement criteria are defined</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Negative disqualifier criteria are configured</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Point values are weighted appropriately (high-intent = more points)</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Model validated on 5–10 known good leads and 5–10 bad leads</div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--dark);margin-bottom:16px;">🤝 Alignment & Process</h3>
+        <div class="checklist">
+          <div class="checklist-item"><div class="check-icon">✓</div>MQL threshold agreed upon with sales leadership</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>SQL threshold agreed upon with sales leadership</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Response SLA defined for MQLs (e.g., 24 hours)</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Response SLA defined for SQLs (e.g., 4 hours)</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Sales team trained on what lead score means</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Criteria and logic documented in an internal wiki/SOP</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+      <div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--dark);margin-bottom:16px;">🔁 Workflows Built</h3>
+        <div class="checklist">
+          <div class="checklist-item"><div class="check-icon">✓</div>MQL alert + lifecycle update workflow (Score ≥ 50)</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>SQL urgent alert + rep assignment workflow (Score ≥ 75)</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Score decay workflow for inactive contacts</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Cold lead nurture email sequence (Score &lt; 25)</div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:17px;font-weight:700;color:var(--dark);margin-bottom:16px;">📊 Reporting & Review</h3>
+        <div class="checklist">
+          <div class="checklist-item"><div class="check-icon">✓</div>HubSpot report created: Contacts by Score Band</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Report created: MQL-to-SQL conversion rate by month</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>Report created: Closed/Won deals by Lead Score Band</div>
+          <div class="checklist-item"><div class="check-icon">✓</div>30-day model review calendar event scheduled</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout success" style="margin-top:32px;">
+      <div class="callout-icon">🚀</div>
+      <div class="callout-body">
+        <h4>You're Ready to Launch!</h4>
+        <p>Once all items above are checked, your lead scoring system is live. Expect the first meaningful results within <strong>30–60 days</strong> as enough contacts accumulate scores and your sales team establishes the MQL follow-up rhythm. Review and iterate every month — a well-tuned scoring model is one of the highest-ROI activities in your HubSpot portal.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     FOOTER
+══════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo">HubSpot Lead Scoring Guide</div>
+    <p>This document provides a professional, client-ready framework for implementing and optimizing lead scoring inside HubSpot CRM to prioritize sales effort and increase revenue.</p>
+    <div class="footer-divider"></div>
+    <div class="footer-meta">Prepared April 2026 &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; For internal use and client distribution</div>
+  </div>
+</footer>
+
+</body>
+</html>

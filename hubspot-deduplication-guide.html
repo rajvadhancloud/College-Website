@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HubSpot Contacts & Companies Deduplication Guide</title>
+  <style>
+    :root {
+      --primary: #FF7A59;
+      --primary-dark: #e05a3a;
+      --secondary: #0091AE;
+      --secondary-dark: #006e84;
+      --dark: #1a1a2e;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f7fafc;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --success: #38a169;
+      --warning: #d69e2e;
+      --danger: #e53e3e;
+      --info: #3182ce;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ─── Cover Page ─────────────────────────────────── */
+    .cover {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,122,89,0.15) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      border-radius: 50%;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(0,145,174,0.15) 0%, transparent 70%);
+      bottom: -100px; left: -50px;
+      border-radius: 50%;
+    }
+    .cover-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 60px;
+      z-index: 1;
+    }
+    .cover-logo svg { width: 48px; height: 48px; }
+    .cover-logo-text {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+    .cover-badge {
+      background: rgba(255,122,89,0.15);
+      border: 1px solid rgba(255,122,89,0.4);
+      color: var(--primary);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      z-index: 1;
+    }
+    .cover h1 {
+      font-size: clamp(32px, 5vw, 58px);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.15;
+      margin-bottom: 24px;
+      z-index: 1;
+      max-width: 820px;
+    }
+    .cover h1 span { color: var(--primary); }
+    .cover-subtitle {
+      font-size: 18px;
+      color: rgba(255,255,255,0.65);
+      max-width: 600px;
+      margin-bottom: 50px;
+      z-index: 1;
+    }
+    .cover-meta {
+      display: flex;
+      gap: 40px;
+      z-index: 1;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .cover-meta-item { text-align: center; }
+    .cover-meta-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 4px;
+    }
+    .cover-meta-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+    .cover-divider {
+      width: 60px; height: 3px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      margin: 40px auto;
+      border-radius: 2px;
+      z-index: 1;
+    }
+
+    /* ─── Layout ─────────────────────────────────────── */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── Page Header (non-cover pages) ─────────────── */
+    .page-header {
+      background: var(--white);
+      border-bottom: 3px solid var(--primary);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .page-header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .page-header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-header-brand svg { width: 32px; height: 32px; }
+    .page-header-brand span {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .page-header-title {
+      font-size: 13px;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    /* ─── Table of Contents ──────────────────────────── */
+    .toc-section {
+      background: var(--white);
+      padding: 64px 0;
+    }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .toc-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s ease;
+      background: var(--bg);
+    }
+    .toc-item:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+      background: var(--white);
+    }
+    .toc-num {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--white);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .toc-item-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .toc-item-desc { font-size: 12px; color: var(--text-light); }
+
+    /* ─── Section ────────────────────────────────────── */
+    .section {
+      padding: 72px 0;
+    }
+    .section:nth-child(even) { background: var(--white); }
+
+    .section-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,122,89,0.08);
+      border: 1px solid rgba(255,122,89,0.25);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 800;
+      color: var(--dark);
+      line-height: 1.25;
+      margin-bottom: 14px;
+    }
+    .section-title span { color: var(--primary); }
+
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-light);
+      max-width: 680px;
+      margin-bottom: 40px;
+    }
+
+    .divider-line {
+      width: 56px; height: 4px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      border-radius: 2px;
+      margin-bottom: 28px;
+    }
+
+    /* ─── Impact Cards ───────────────────────────────── */
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+    .impact-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    .impact-card:hover { transform: translateY(-4px); }
+    .impact-icon {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    }
+    .impact-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--dark); }
+    .impact-card p { font-size: 13px; color: var(--text-light); line-height: 1.5; }
+
+    /* ─── Steps ──────────────────────────────────────── */
+    .steps-list { display: flex; flex-direction: column; gap: 28px; }
+    .step-card {
+      display: flex;
+      gap: 24px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s;
+      align-items: flex-start;
+    }
+    .step-card:hover { box-shadow: var(--shadow-lg); }
+    .step-number {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--white);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .step-body { flex: 1; }
+    .step-body h3 { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .step-body p { font-size: 14px; color: var(--text-light); margin-bottom: 12px; }
+
+    /* ─── Sub-steps ──────────────────────────────────── */
+    .substep-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .substep-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      padding: 10px 14px;
+      border-radius: 8px;
+      border-left: 3px solid var(--primary);
+    }
+    .substep-list li::before {
+      content: '▶';
+      color: var(--primary);
+      font-size: 10px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    /* ─── Info / Warning / Tip Boxes ─────────────────── */
+    .callout {
+      display: flex;
+      gap: 16px;
+      padding: 20px 24px;
+      border-radius: 12px;
+      margin: 24px 0;
+      align-items: flex-start;
+    }
+    .callout-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+    .callout-body h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .callout-body p, .callout-body ul { font-size: 13px; line-height: 1.6; }
+    .callout-body ul { padding-left: 16px; }
+    .callout-body ul li { margin-bottom: 4px; }
+    .callout.info { background: #ebf8ff; border-left: 4px solid var(--info); }
+    .callout.info .callout-body h4 { color: var(--info); }
+    .callout.warning { background: #fffff0; border-left: 4px solid var(--warning); }
+    .callout.warning .callout-body h4 { color: var(--warning); }
+    .callout.success { background: #f0fff4; border-left: 4px solid var(--success); }
+    .callout.success .callout-body h4 { color: var(--success); }
+    .callout.danger { background: #fff5f5; border-left: 4px solid var(--danger); }
+    .callout.danger .callout-body h4 { color: var(--danger); }
+
+    /* ─── Table ──────────────────────────────────────── */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin: 24px 0;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead { background: linear-gradient(135deg, var(--dark), #2d3748); }
+    thead th {
+      padding: 14px 18px;
+      color: var(--white);
+      font-weight: 600;
+      text-align: left;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,122,89,0.04); }
+    tbody td { padding: 13px 18px; color: var(--text); }
+    tbody td:first-child { font-weight: 600; }
+
+    /* ─── Feature Pills ──────────────────────────────── */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .pill.green { background: #f0fff4; color: var(--success); border: 1px solid #9ae6b4; }
+    .pill.orange { background: #fff5eb; color: #c05621; border: 1px solid #fbd38d; }
+    .pill.blue { background: #ebf8ff; color: var(--info); border: 1px solid #90cdf4; }
+    .pill.red { background: #fff5f5; color: var(--danger); border: 1px solid #feb2b2; }
+
+    /* ─── Tool Cards ─────────────────────────────────── */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 32px;
+    }
+    .tool-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+    }
+    .tool-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .tool-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .tool-logo {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .tool-card h3 { font-size: 17px; font-weight: 700; color: var(--dark); }
+    .tool-card .tool-type { font-size: 12px; color: var(--text-light); }
+    .tool-card p { font-size: 13px; color: var(--text-light); margin-bottom: 14px; line-height: 1.6; }
+    .tool-features { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* ─── Checklist ──────────────────────────────────── */
+    .checklist { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .check-icon {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--success), #276749);
+      color: var(--white);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ─── Timeline ───────────────────────────────────── */
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--secondary));
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 32px;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -26px; top: 6px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--white);
+      box-shadow: 0 0 0 3px rgba(255,122,89,0.3);
+    }
+    .timeline-item h4 { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+    .timeline-item p { font-size: 14px; color: var(--text-light); }
+    .timeline-badge {
+      display: inline-block;
+      background: rgba(255,122,89,0.1);
+      color: var(--primary);
+      border: 1px solid rgba(255,122,89,0.3);
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── Code Block ─────────────────────────────────── */
+    .code-block {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #a0ecb1;
+      line-height: 1.7;
+    }
+    .code-block .comment { color: #6a9fb5; }
+    .code-block .key { color: #e9c46a; }
+    .code-block .value { color: #f4a261; }
+
+    /* ─── Footer ─────────────────────────────────────── */
+    .footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.5);
+      padding: 48px 0;
+      text-align: center;
+    }
+    .footer-logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .footer p { font-size: 13px; line-height: 1.7; max-width: 500px; margin: 0 auto; }
+    .footer-divider { width: 40px; height: 2px; background: var(--primary); margin: 20px auto; border-radius: 2px; }
+    .footer-meta { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 16px; }
+
+    /* ─── Print / PDF ────────────────────────────────── */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      html, body {
+        width: 210mm;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page-header { display: none !important; }
+
+      .cover {
+        page-break-after: always;
+        min-height: 297mm;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .cover::before, .cover::after {
+        display: none;
+      }
+
+      .section {
+        page-break-inside: avoid;
+      }
+
+      .step-card,
+      .tool-card,
+      .toc-item,
+      .impact-card,
+      .callout,
+      .table-wrapper {
+        page-break-inside: avoid;
+        box-shadow: none !important;
+      }
+
+      .step-number,
+      .toc-num,
+      .check-icon {
+        background: #FF7A59 !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .cover-badge {
+        background: rgba(255,122,89,0.2) !important;
+        border: 1px solid rgba(255,122,89,0.5) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      thead {
+        background: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .code-block {
+        background: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .callout.info { background: #ebf8ff !important; -webkit-print-color-adjust: exact !important; }
+      .callout.warning { background: #fffff0 !important; -webkit-print-color-adjust: exact !important; }
+      .callout.success { background: #f0fff4 !important; -webkit-print-color-adjust: exact !important; }
+      .callout.danger { background: #fff5f5 !important; -webkit-print-color-adjust: exact !important; }
+
+      .section-eyebrow {
+        background: rgba(255,122,89,0.12) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .divider-line {
+        background: linear-gradient(to right, #FF7A59, #0091AE) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .timeline::before {
+        background: linear-gradient(to bottom, #FF7A59, #0091AE) !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .timeline-item::before {
+        background: #FF7A59 !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .footer {
+        background: #1a1a2e !important;
+        -webkit-print-color-adjust: exact !important;
+      }
+
+      .toc-section {
+        page-break-after: always;
+      }
+    }
+
+    /* ─── Responsive ─────────────────────────────────── */
+    @media (max-width: 640px) {
+      .step-card { flex-direction: column; }
+      .cover-meta { flex-direction: column; gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     COVER PAGE
+════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">
+    <!-- HubSpot sprocket icon -->
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="20" cy="20" r="20" fill="#FF7A59" opacity="0.15"/>
+      <path d="M25.5 14.5c0-1.38-1.12-2.5-2.5-2.5s-2.5 1.12-2.5 2.5c0 .96.55 1.79 1.35 2.2v3.3l-6.85 4c-.45-.3-1-.47-1.5-.47-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3c0-.16-.02-.32-.04-.47l4.04-2.36 4.04 2.36c-.02.15-.04.31-.04.47 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3c-.5 0-.97.13-1.37.37L22 19.98v-3.28c.8-.41 1.5-1.24 1.5-2.2z" fill="#FF7A59"/>
+    </svg>
+    <span class="cover-logo-text">HubSpot CRM</span>
+  </div>
+
+  <div class="cover-badge">Professional Data Optimization Guide</div>
+
+  <h1>Eliminate Duplicate<br><span>Contacts & Companies</span><br>in HubSpot</h1>
+
+  <p class="cover-subtitle">
+    A step-by-step playbook to identify, merge, and prevent duplicate records — restoring data integrity and maximizing your CRM investment.
+  </p>
+
+  <div class="cover-divider"></div>
+
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Document Type</div>
+      <div class="cover-meta-value">Technical Guide</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Audience</div>
+      <div class="cover-meta-value">CRM Administrators</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Prepared</div>
+      <div class="cover-meta-value">April 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Version</div>
+      <div class="cover-meta-value">1.0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     STICKY NAV
+════════════════════════════════════════════════════ -->
+<header class="page-header">
+  <div class="container">
+    <div class="page-header-brand">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M25.5 14.5c0-1.38-1.12-2.5-2.5-2.5s-2.5 1.12-2.5 2.5c0 .96.55 1.79 1.35 2.2v3.3l-6.85 4c-.45-.3-1-.47-1.5-.47-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3c0-.16-.02-.32-.04-.47l4.04-2.36 4.04 2.36c-.02.15-.04.31-.04.47 0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3c-.5 0-.97.13-1.37.37L22 19.98v-3.28c.8-.41 1.5-1.24 1.5-2.2z" fill="#FF7A59"/>
+      </svg>
+      <span>HubSpot Deduplication Guide</span>
+    </div>
+    <div class="page-header-title">Contacts &amp; Companies Optimization</div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════
+     TABLE OF CONTENTS
+════════════════════════════════════════════════════ -->
+<section class="toc-section">
+  <div class="container">
+    <div class="section-eyebrow">📋 Navigation</div>
+    <h2 class="section-title">Table of <span>Contents</span></h2>
+    <div class="divider-line"></div>
+    <div class="toc-grid">
+      <a class="toc-item" href="#why-it-matters">
+        <div class="toc-num">1</div>
+        <div>
+          <div class="toc-item-title">Why Duplicates Are Harmful</div>
+          <div class="toc-item-desc">Business impact & cost of duplicate records</div>
+        </div>
+      </a>
+      <a class="toc-item" href="#identify-contacts">
+        <div class="toc-num">2</div>
+        <div>
+          <div class="toc-item-title">Identify Duplicate Contacts</div>
+          <div class="toc-item-desc">Built-in tools & manual detection methods</div>
+        </div>
+      </a>
+      <a class="toc-item" href="#identify-companies">
+        <div class="toc-num">3</div>
+        <div>
+          <div class="toc-item-title">Identify Duplicate Companies</div>
+          <div class="toc-item-desc">Domain matching & company deduplication</div>
+        </div>
+      </a>
+      <a class="toc-item" href="#merge-contacts">
+        <div class="toc-num">4</div>
+        <div>
+          <div class="toc-item-title">Merge Duplicate Contacts</div>
+          <div class="toc-item-desc">Step-by-step manual & bulk merge guide</div>
+        </div>
+      </a>
+      <a class="toc-item" href="#merge-companies">
+        <div class="toc-num">5</div>
+        <div>
+          <div class="toc-item-title">Merge Duplicate Companies</div>
+          <div class="toc-item-desc">Company record consolidation process</div>
+        </div>
+      </a>
+      <a class="toc-item" href="#third-party-tools">
+        <div class="toc-num">6</div>
+        <div>
+          <div class="toc-item-title">Third-Party Tools</div>
+          <div class="toc-item-desc">Recommended apps for large-scale cleanup</div>
+        </div>
+      </a>
+      <a class="toc-item" href="#prevention">
+        <div class="toc-num">7</div>
+        <div>
+          <div class="toc-item-title">Prevention Strategy</div>
+          <div class="toc-item-desc">Forms, workflows & data governance</div>
+        </div>
+      </a>
+      <a class="toc-item" href="#checklist">
+        <div class="toc-num">8</div>
+        <div>
+          <div class="toc-item-title">Maintenance Checklist</div>
+          <div class="toc-item-desc">Ongoing data hygiene best practices</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 1 — WHY IT MATTERS
+════════════════════════════════════════════════════ -->
+<section class="section" id="why-it-matters">
+  <div class="container">
+    <div class="section-eyebrow">⚠️ Section 01</div>
+    <h2 class="section-title">Why Duplicate Records Are <span>Harmful</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Duplicate records are one of the most damaging data quality issues in any CRM. Left unchecked, they erode trust in your data, waste team time, and directly hurt revenue.
+    </p>
+
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-icon" style="background: #fff5f5;">📧</div>
+        <h4>Email Fatigue</h4>
+        <p>Contacts receive the same campaign multiple times, leading to unsubscribes and spam complaints.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon" style="background: #fffff0;">📊</div>
+        <h4>Inaccurate Reporting</h4>
+        <p>Sales forecasts, pipeline metrics, and ROI calculations are inflated and unreliable.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon" style="background: #f0fff4;">💸</div>
+        <h4>Wasted Budget</h4>
+        <p>You pay for duplicate contacts in your HubSpot plan tier and marketing send limits.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon" style="background: #ebf8ff;">🤝</div>
+        <h4>Poor Sales Experience</h4>
+        <p>Reps unknowingly contact the same prospect twice, damaging professional relationships.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon" style="background: #faf5ff;">⚙️</div>
+        <h4>Broken Automation</h4>
+        <p>Workflows, sequences, and lead scoring fire incorrectly on duplicate records.</p>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon" style="background: #fff5eb;">🔒</div>
+        <h4>Compliance Risk</h4>
+        <p>GDPR / CAN-SPAM compliance becomes difficult when the same person has multiple records.</p>
+      </div>
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <h4>Industry Benchmark</h4>
+        <p>Research shows that <strong>10–30% of CRM records are duplicates</strong> in a typical database. For a HubSpot portal with 10,000 contacts, that could mean up to 3,000 duplicate records silently degrading your operations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 2 — IDENTIFY DUPLICATE CONTACTS
+════════════════════════════════════════════════════ -->
+<section class="section" id="identify-contacts">
+  <div class="container">
+    <div class="section-eyebrow">🔍 Section 02</div>
+    <h2 class="section-title">Identify Duplicate <span>Contacts</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      HubSpot provides a native deduplication tool for contacts on Professional and Enterprise tiers. Here is how to use it alongside manual methods.
+    </p>
+
+    <div class="steps-list">
+
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-body">
+          <h3>Use HubSpot's Native Duplicate Management Tool</h3>
+          <p>HubSpot automatically identifies potential duplicate contacts based on email address, name similarity, and other properties.</p>
+          <ul class="substep-list">
+            <li>Go to <strong>Contacts</strong> → <strong>Contacts</strong> in the top navigation.</li>
+            <li>Click <strong>Actions</strong> → <strong>Manage Duplicates</strong> (top-right area).</li>
+            <li>HubSpot will display a list of suspected duplicate pairs side-by-side.</li>
+            <li>Review each pair and choose to <strong>Merge</strong> or <strong>Not a Duplicate</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-body">
+          <h3>Export & Analyze in Excel / Google Sheets</h3>
+          <p>For large databases, exporting and filtering by key fields gives you full visibility.</p>
+          <ul class="substep-list">
+            <li>Go to <strong>Contacts</strong> → click <strong>Export</strong> (top right).</li>
+            <li>Export properties: <strong>Email, First Name, Last Name, Phone, Company Name, Create Date</strong>.</li>
+            <li>In Excel: Sort by <strong>Email</strong>, then use <code>COUNTIF</code> to flag duplicates.</li>
+            <li>Use <strong>Conditional Formatting → Highlight Duplicate Values</strong> for visual review.</li>
+            <li>Use <code>=LOWER(TRIM(A2))</code> to normalize emails before comparison.</li>
+          </ul>
+          <div class="code-block">
+            <pre><span class="comment">// Excel formula to flag duplicates</span>
+<span class="key">Column A:</span> <span class="value">Email addresses (all lowercase/trimmed)</span>
+<span class="key">Column B:</span> <span class="value">=COUNTIF($A:$A, A2)  → values > 1 are duplicates</span>
+<span class="key">Filter:</span>   <span class="value">Filter Column B for values >= 2</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-body">
+          <h3>Create a Filtered View for Duplicates</h3>
+          <p>Build a saved contact view in HubSpot to surface records with missing or suspicious data that often indicate duplicates.</p>
+          <ul class="substep-list">
+            <li>Go to <strong>Contacts</strong> → <strong>Add Filter</strong>.</li>
+            <li>Filter: <strong>Email</strong> is unknown → finds contacts without email (common in duplicates).</li>
+            <li>Filter: <strong>Create Date</strong> is recent → catches newly imported duplicates.</li>
+            <li>Filter: <strong>Number of associated deals</strong> is 0 → orphan contacts often from imports.</li>
+            <li>Save the view as <strong>"Possible Duplicates Review"</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <div class="step-body">
+          <h3>Check Duplication by Phone Number</h3>
+          <p>Email-based deduplication misses contacts with different email formats but the same phone number.</p>
+          <ul class="substep-list">
+            <li>Export contacts with <strong>Phone Number</strong> field included.</li>
+            <li>Sort and apply <code>COUNTIF</code> on the Phone column.</li>
+            <li>Cross-reference matched phone numbers with names to confirm duplicates.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout info">
+      <div class="callout-icon">ℹ️</div>
+      <div class="callout-body">
+        <h4>HubSpot Plan Requirement</h4>
+        <p>The native <strong>Manage Duplicates</strong> tool is available on <strong>HubSpot Professional and Enterprise</strong> plans for both Contacts and Companies. Starter plan users will need to rely on manual export/filter methods or third-party apps.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 3 — IDENTIFY DUPLICATE COMPANIES
+════════════════════════════════════════════════════ -->
+<section class="section" id="identify-companies">
+  <div class="container">
+    <div class="section-eyebrow">🏢 Section 03</div>
+    <h2 class="section-title">Identify Duplicate <span>Companies</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Company duplicates are often trickier — the same business may be entered as "Acme Inc.", "Acme Inc", "ACME", and "Acme International". Here's how to find them all.
+    </p>
+
+    <div class="steps-list">
+
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-body">
+          <h3>Use HubSpot's Company Duplicate Manager</h3>
+          <p>HubSpot matches companies primarily by <strong>company domain name</strong>.</p>
+          <ul class="substep-list">
+            <li>Go to <strong>Companies</strong> → <strong>Actions</strong> → <strong>Manage Duplicates</strong>.</li>
+            <li>HubSpot shows pairs matched by domain, name similarity, and phone.</li>
+            <li>Review each pair and confirm which record to keep as the <strong>primary</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-body">
+          <h3>Export & Clean by Domain Name</h3>
+          <p>Domain is the most reliable unique identifier for companies. Use it as your primary deduplication key.</p>
+          <ul class="substep-list">
+            <li>Export companies with: <strong>Company Name, Domain, Phone, City, Create Date, Number of Contacts</strong>.</li>
+            <li>Sort by <strong>Domain Name</strong> column.</li>
+            <li>Use <code>COUNTIF</code> on Domain to flag duplicates.</li>
+            <li>For companies without a domain: group by <strong>Company Name</strong> after normalizing case.</li>
+          </ul>
+          <div class="code-block">
+            <pre><span class="comment">// Normalize company names for comparison</span>
+<span class="key">=LOWER(TRIM(SUBSTITUTE(A2,"Inc.","")))</span>
+<span class="comment">// Strip common suffixes: Inc, LLC, Ltd, Corp</span>
+<span class="key">=TRIM(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(A2,"Inc",""),"LLC",""),"Ltd",""))</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-body">
+          <h3>Identify Companies With Too Many Contacts</h3>
+          <p>When duplicate companies exist, contacts get split between them. Finding companies with disproportionately few contacts can reveal fragments.</p>
+          <ul class="substep-list">
+            <li>In the export, sort by <strong>Number of Associated Contacts</strong> ascending.</li>
+            <li>Companies with 0–1 contacts but a matching domain/name are likely duplicates.</li>
+            <li>Compare against the primary company record by domain.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout success">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <h4>Pro Tip: Domain as the Golden Key</h4>
+        <p>Always ensure the <strong>Company Domain Name</strong> property is populated for every company record. HubSpot uses this field to automatically associate contacts and prevent future duplicates. Make this a required field in your import templates.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 4 — MERGE CONTACTS
+════════════════════════════════════════════════════ -->
+<section class="section" id="merge-contacts">
+  <div class="container">
+    <div class="section-eyebrow">🔀 Section 04</div>
+    <h2 class="section-title">How to Merge Duplicate <span>Contacts</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Merging combines two contact records into one, preserving all associated data including deals, emails, notes, and activities from both records.
+    </p>
+
+    <div class="callout danger">
+      <div class="callout-icon">🚨</div>
+      <div class="callout-body">
+        <h4>Important: Merges Are Permanent</h4>
+        <p>HubSpot merges <strong>cannot be undone</strong>. Always export a backup of your contacts before starting a bulk merge process. Go to <strong>Contacts → Export</strong> and save the full export file.</p>
+      </div>
+    </div>
+
+    <div class="steps-list" style="margin-top:32px;">
+
+      <div class="step-card">
+        <div class="step-number">A</div>
+        <div class="step-body">
+          <h3>Method A: Merge via Manage Duplicates Tool (Recommended)</h3>
+          <p>The fastest and safest built-in approach.</p>
+          <ul class="substep-list">
+            <li>Navigate to <strong>Contacts → Actions → Manage Duplicates</strong>.</li>
+            <li>Review the duplicate pair displayed side-by-side.</li>
+            <li>Select which record will be the <strong>Primary</strong> (the one to keep — its record ID is preserved).</li>
+            <li>The primary contact retains its properties unless the secondary has more recent data.</li>
+            <li>Click <strong>Merge</strong> to combine. All timeline activity is merged into the primary record.</li>
+            <li>Repeat for each pair in the queue.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">B</div>
+        <div class="step-body">
+          <h3>Method B: Merge from the Contact Record</h3>
+          <p>Use this when you know the two specific records to merge.</p>
+          <ul class="substep-list">
+            <li>Open the <strong>primary contact record</strong> you want to keep.</li>
+            <li>Click the <strong>Actions</strong> button (top right of the record).</li>
+            <li>Select <strong>Merge</strong>.</li>
+            <li>Search for and select the <strong>duplicate contact</strong> to merge into the primary.</li>
+            <li>Review the property conflict resolution panel.</li>
+            <li>Confirm and click <strong>Merge</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">C</div>
+        <div class="step-body">
+          <h3>Method C: Bulk Merge via HubSpot API</h3>
+          <p>For advanced users with large-scale duplicates — use the HubSpot Contacts API to merge records programmatically.</p>
+          <div class="code-block">
+            <pre><span class="comment">// HubSpot API – Merge Contacts (POST)</span>
+<span class="key">URL:</span>  <span class="value">https://api.hubapi.com/contacts/v1/contact/merge-vids/&lt;primaryId&gt;/</span>
+
+<span class="key">Method:</span> <span class="value">POST</span>
+<span class="key">Headers:</span>
+  <span class="value">Authorization: Bearer YOUR_ACCESS_TOKEN</span>
+  <span class="value">Content-Type: application/json</span>
+
+<span class="key">Body:</span>
+{
+  <span class="value">"vidToMerge": &lt;duplicateContactId&gt;</span>
+}</pre>
+          </div>
+          <ul class="substep-list">
+            <li>Use your exported duplicate list to generate merge pairs.</li>
+            <li>Script the API calls using Python, Node.js, or Postman.</li>
+            <li>Process in batches of 50–100 records and add a delay to avoid rate limits.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout info" style="margin-top:32px;">
+      <div class="callout-icon">ℹ️</div>
+      <div class="callout-body">
+        <h4>What Happens When You Merge?</h4>
+        <ul>
+          <li>All <strong>timeline activities</strong> (emails, calls, notes, meetings) from both records are combined.</li>
+          <li><strong>Associated deals, tickets, and companies</strong> are retained on the primary record.</li>
+          <li><strong>Property values</strong>: The primary record's values are kept by default; you can override selected fields during merge.</li>
+          <li>The secondary record's <strong>Contact ID (VID)</strong> is permanently removed.</li>
+          <li>Any <strong>list memberships</strong> from both records are preserved on the primary.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 5 — MERGE COMPANIES
+════════════════════════════════════════════════════ -->
+<section class="section" id="merge-companies">
+  <div class="container">
+    <div class="section-eyebrow">🏢 Section 05</div>
+    <h2 class="section-title">How to Merge Duplicate <span>Companies</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Merging company records consolidates all associated contacts, deals, and activities under one authoritative company profile.
+    </p>
+
+    <div class="steps-list">
+
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-body">
+          <h3>Merge via Manage Duplicates (Companies)</h3>
+          <ul class="substep-list">
+            <li>Go to <strong>Companies</strong> → <strong>Actions</strong> → <strong>Manage Duplicates</strong>.</li>
+            <li>Review each duplicate pair. Note the <strong>number of associated contacts and deals</strong> on each.</li>
+            <li>Select the record with more complete data and more associations as the <strong>Primary</strong>.</li>
+            <li>Click <strong>Merge</strong>. All contacts, deals, and properties from the secondary are moved to the primary.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-body">
+          <h3>Merge from a Company Record</h3>
+          <ul class="substep-list">
+            <li>Open the <strong>primary company record</strong>.</li>
+            <li>Click <strong>Actions</strong> → <strong>Merge</strong>.</li>
+            <li>Search for the duplicate company name.</li>
+            <li>Confirm which record to keep and click <strong>Merge</strong>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-body">
+          <h3>Reassign Orphan Contacts Before Merging</h3>
+          <p>Before merging companies, ensure contacts associated with the secondary company are correctly linked.</p>
+          <ul class="substep-list">
+            <li>On the secondary company record, open the <strong>Contacts</strong> panel.</li>
+            <li>Verify each contact should belong to the primary company.</li>
+            <li>If needed, manually update the contact's <strong>Company</strong> association before merging.</li>
+            <li>Proceed with the merge once associations are verified.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="table-wrapper" style="margin-top: 40px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Behavior During Company Merge</th>
+            <th>Action Required</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Company Name</td>
+            <td>Primary record's name is retained</td>
+            <td>Choose primary as the correctly named record</td>
+          </tr>
+          <tr>
+            <td>Domain Name</td>
+            <td>Primary domain is retained; secondary stored as alias</td>
+            <td>Verify the primary has the correct domain</td>
+          </tr>
+          <tr>
+            <td>Associated Contacts</td>
+            <td>All contacts from both records are moved to primary</td>
+            <td>Review for any mismatched contacts after merge</td>
+          </tr>
+          <tr>
+            <td>Associated Deals</td>
+            <td>All deals from secondary are moved to primary</td>
+            <td>Review deal names/stages for accuracy</td>
+          </tr>
+          <tr>
+            <td>Timeline Activity</td>
+            <td>Combined from both records</td>
+            <td>No action needed</td>
+          </tr>
+          <tr>
+            <td>Custom Properties</td>
+            <td>Primary values win; secondary values discarded</td>
+            <td>Copy important secondary values before merging</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 6 — THIRD-PARTY TOOLS
+════════════════════════════════════════════════════ -->
+<section class="section" id="third-party-tools">
+  <div class="container">
+    <div class="section-eyebrow">🛠️ Section 06</div>
+    <h2 class="section-title">Recommended Third-Party <span>Tools</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      For databases with thousands of duplicates, native HubSpot tools can be time-consuming. These specialized tools provide automation, fuzzy matching, and bulk processing.
+    </p>
+
+    <div class="tools-grid">
+
+      <div class="tool-card">
+        <div class="tool-card-header">
+          <div class="tool-logo" style="background: #fff5eb;">🔁</div>
+          <div>
+            <h3>Dedupely</h3>
+            <div class="tool-type">HubSpot Native Integration</div>
+          </div>
+        </div>
+        <p>The most popular HubSpot deduplication app. Uses fuzzy matching to find duplicates that HubSpot's native tool misses. Supports bulk auto-merge with rules.</p>
+        <div class="tool-features">
+          <span class="pill orange">Fuzzy Name Match</span>
+          <span class="pill green">Bulk Merge</span>
+          <span class="pill blue">Auto Rules</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-header">
+          <div class="tool-logo" style="background: #f0fff4;">🧹</div>
+          <div>
+            <h3>Insycle</h3>
+            <div class="tool-type">Data Management Platform</div>
+          </div>
+        </div>
+        <p>A comprehensive CRM data management tool for HubSpot. Handles deduplication, data standardization, bulk editing, and import templates.</p>
+        <div class="tool-features">
+          <span class="pill green">Deduplication</span>
+          <span class="pill blue">Data Cleansing</span>
+          <span class="pill orange">Bulk Edit</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-header">
+          <div class="tool-logo" style="background: #ebf8ff;">⚡</div>
+          <div>
+            <h3>Databox / Supermetrics</h3>
+            <div class="tool-type">Data Audit & Reporting</div>
+          </div>
+        </div>
+        <p>Use for ongoing data quality monitoring and identifying data anomalies in your HubSpot portal. Good for building duplicate-detection dashboards.</p>
+        <div class="tool-features">
+          <span class="pill blue">Monitoring</span>
+          <span class="pill green">Reporting</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-header">
+          <div class="tool-logo" style="background: #faf5ff;">🔗</div>
+          <div>
+            <h3>Clearbit Enrichment</h3>
+            <div class="tool-type">Data Enrichment</div>
+          </div>
+        </div>
+        <p>Enrich contact and company records with verified data from Clearbit. Helps normalize and complete records before deduplication, reducing false positives.</p>
+        <div class="tool-features">
+          <span class="pill blue">Enrichment</span>
+          <span class="pill green">Normalization</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-header">
+          <div class="tool-logo" style="background: #f0fff4;">🐍</div>
+          <div>
+            <h3>Python + HubSpot API</h3>
+            <div class="tool-type">Custom Script</div>
+          </div>
+        </div>
+        <p>For technical teams: write a custom deduplication script using Python and the HubSpot API. Full control over matching logic, merge rules, and logging.</p>
+        <div class="tool-features">
+          <span class="pill green">Full Control</span>
+          <span class="pill orange">Custom Logic</span>
+          <span class="pill blue">Auditable</span>
+        </div>
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-card-header">
+          <div class="tool-logo" style="background: #fff5f5;">📋</div>
+          <div>
+            <h3>HubSpot Import Tool</h3>
+            <div class="tool-type">Built-in (Free)</div>
+          </div>
+        </div>
+        <p>Use HubSpot's import tool with the "Update existing records" option to standardize properties across duplicates before merging them manually.</p>
+        <div class="tool-features">
+          <span class="pill green">Free</span>
+          <span class="pill blue">Built-in</span>
+          <span class="pill orange">Update Records</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="table-wrapper" style="margin-top: 48px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Tool</th>
+            <th>Best For</th>
+            <th>Pricing</th>
+            <th>Fuzzy Match</th>
+            <th>Bulk Merge</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HubSpot Native</td>
+            <td>Small databases (&lt;5k records)</td>
+            <td><span class="pill green">Free / Pro+</span></td>
+            <td>Limited</td>
+            <td>Manual</td>
+          </tr>
+          <tr>
+            <td>Dedupely</td>
+            <td>Mid-size databases</td>
+            <td><span class="pill orange">From $25/mo</span></td>
+            <td>✅ Yes</td>
+            <td>✅ Yes</td>
+          </tr>
+          <tr>
+            <td>Insycle</td>
+            <td>Full data governance</td>
+            <td><span class="pill orange">From $49/mo</span></td>
+            <td>✅ Yes</td>
+            <td>✅ Yes</td>
+          </tr>
+          <tr>
+            <td>Python API Script</td>
+            <td>Large / complex databases</td>
+            <td><span class="pill green">Free (dev cost)</span></td>
+            <td>Custom</td>
+            <td>✅ Yes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 7 — PREVENTION STRATEGY
+════════════════════════════════════════════════════ -->
+<section class="section" id="prevention">
+  <div class="container">
+    <div class="section-eyebrow">🛡️ Section 07</div>
+    <h2 class="section-title">Duplicate Prevention <span>Strategy</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Cleaning duplicates is a one-time fix. Prevention is the ongoing discipline that keeps your CRM healthy. These practices eliminate duplicates at the source.
+    </p>
+
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <div class="timeline-badge">Form Settings</div>
+        <h4>Enable "Update existing contact" on all HubSpot Forms</h4>
+        <p>In your HubSpot form settings, enable <strong>"Update contact if contact already exists"</strong>. This ensures that when a known contact submits a form, HubSpot updates their record instead of creating a new one. This is the single most impactful setting for preventing form-based duplicates.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-badge">Import Rules</div>
+        <h4>Always use "Update existing records" during CSV imports</h4>
+        <p>When importing contact lists, always select the option to <strong>update existing records</strong> rather than creating new ones. Use <strong>Email Address</strong> as the unique identifier for contacts and <strong>Domain Name</strong> for companies during every import.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-badge">Workflows</div>
+        <h4>Build a Duplicate Detection Workflow</h4>
+        <p>Create a HubSpot workflow that triggers on <strong>Contact Created</strong>. The workflow checks if the email domain already exists and sends an internal notification to a CRM admin for review. This provides a real-time alert system for new potential duplicates.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-badge">Team Training</div>
+        <h4>Train all CRM users on duplicate prevention</h4>
+        <p>Before manually creating a contact or company, team members should always <strong>search HubSpot first</strong>. Establish a policy: <em>"Search before you create."</em> Include this in your CRM onboarding SOP for all new sales and marketing team members.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-badge">API Integration</div>
+        <h4>Validate records before sending to HubSpot from third-party apps</h4>
+        <p>If you're sending data to HubSpot from other systems (Salesforce, Shopify, etc.), build a <strong>pre-insert check</strong> using the HubSpot Search API to verify whether a contact or company already exists before creating a new record.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-badge">Scheduled Audit</div>
+        <h4>Schedule a monthly deduplication audit</h4>
+        <p>Deduplicate your CRM is not a one-time task. Set a recurring calendar event every <strong>30 days</strong> for a CRM admin to run the Manage Duplicates tool and review the results. Use a Dedupely or Insycle scheduled scan if available in your plan.</p>
+      </div>
+
+    </div>
+
+    <div class="callout success" style="margin-top: 40px;">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <h4>HubSpot's Automatic Deduplication (Always Active)</h4>
+        <p>HubSpot automatically deduplicates contacts by <strong>email address</strong> — you cannot have two contacts with the exact same email. For companies, HubSpot deduplicates by <strong>company domain name</strong>. Ensuring every record has these fields populated activates HubSpot's built-in protection.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SECTION 8 — CHECKLIST
+════════════════════════════════════════════════════ -->
+<section class="section" id="checklist">
+  <div class="container">
+    <div class="section-eyebrow">✅ Section 08</div>
+    <h2 class="section-title">Ongoing Maintenance <span>Checklist</span></h2>
+    <div class="divider-line"></div>
+    <p class="section-desc">
+      Use this checklist as a recurring data hygiene process to maintain a clean, accurate HubSpot CRM.
+    </p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
+
+      <div>
+        <h3 style="font-size:17px; font-weight:700; color:var(--dark); margin-bottom:16px;">🗓️ Monthly Tasks</h3>
+        <div class="checklist">
+          <div class="checklist-item"><div class="check-icon">✓</div> Run Manage Duplicates for Contacts</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Run Manage Duplicates for Companies</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Review contacts with no email address</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Review companies with no domain name</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Archive contacts with no activity in 12+ months</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Check for contacts with duplicate phone numbers</div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="font-size:17px; font-weight:700; color:var(--dark); margin-bottom:16px;">📆 Quarterly Tasks</h3>
+        <div class="checklist">
+          <div class="checklist-item"><div class="check-icon">✓</div> Full export and Excel duplicate analysis</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Review and update CRM import SOP</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Audit HubSpot form settings for all forms</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Verify all API integrations use update-or-create logic</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Train any new team members on CRM data policy</div>
+          <div class="checklist-item"><div class="check-icon">✓</div> Review and optimize contact lifecycle stages</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout warning">
+      <div class="callout-icon">📌</div>
+      <div class="callout-body">
+        <h4>Assign a CRM Data Owner</h4>
+        <p>Data quality degrades without ownership. Designate one person (or a small team) as the <strong>CRM Data Owner</strong> responsible for running these audits, enforcing data entry standards, and approving all bulk imports. Without a named owner, deduplication work will slip.</p>
+      </div>
+    </div>
+
+    <!-- Summary Table -->
+    <div class="table-wrapper" style="margin-top: 40px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Frequency</th>
+            <th>Tool</th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Run Contact Duplicate Manager</td>
+            <td>Monthly</td>
+            <td>HubSpot Native</td>
+            <td>CRM Admin</td>
+          </tr>
+          <tr>
+            <td>Run Company Duplicate Manager</td>
+            <td>Monthly</td>
+            <td>HubSpot Native</td>
+            <td>CRM Admin</td>
+          </tr>
+          <tr>
+            <td>Export + Excel Duplicate Audit</td>
+            <td>Quarterly</td>
+            <td>HubSpot + Excel</td>
+            <td>CRM Admin</td>
+          </tr>
+          <tr>
+            <td>Dedupely / Insycle Scheduled Scan</td>
+            <td>Weekly (automated)</td>
+            <td>Dedupely / Insycle</td>
+            <td>Automated</td>
+          </tr>
+          <tr>
+            <td>Verify form "update existing" setting</td>
+            <td>Quarterly</td>
+            <td>HubSpot Forms</td>
+            <td>Marketing Ops</td>
+          </tr>
+          <tr>
+            <td>Team CRM training / refresher</td>
+            <td>Quarterly</td>
+            <td>Internal SOP</td>
+            <td>CRM Owner</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo">HubSpot CRM Optimization Guide</div>
+    <p>This document provides a comprehensive, professional framework for eliminating duplicate contacts and companies in HubSpot CRM, and maintaining data quality on an ongoing basis.</p>
+    <div class="footer-divider"></div>
+    <div class="footer-meta">
+      Prepared April 2026 &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; For internal distribution and client use
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
